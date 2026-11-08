@@ -1,0 +1,49 @@
+{
+ "default": [
+  "EQNR.OL",
+  "DNB.OL",
+  "MOWI.OL",
+  "AAPL",
+  "NVDA",
+  "MSFT",
+  "BTC-USD",
+  "ETH-USD"
+ ],
+ "tickers": {
+  "EQNR.OL": "Equinor",
+  "DNB.OL": "DNB Bank",
+  "MOWI.OL": "Mowi",
+  "NHY.OL": "Norsk Hydro",
+  "TEL.OL": "Telenor",
+  "YAR.OL": "Yara",
+  "ORK.OL": "Orkla",
+  "SALM.OL": "SalMar",
+  "AKRBP.OL": "Aker BP",
+  "KOG.OL": "Kongsberg Gruppen",
+  "NAS.OL": "Norwegian Air Shuttle",
+  "STB.OL": "Storebrand",
+  "GJF.OL": "Gjensidige",
+  "AAPL": "Apple",
+  "MSFT": "Microsoft",
+  "NVDA": "Nvidia",
+  "TSLA": "Tesla",
+  "AMZN": "Amazon",
+  "GOOGL": "Alphabet",
+  "META": "Meta",
+  "AMD": "AMD",
+  "NFLX": "Netflix",
+  "JPM": "JPMorgan"
+ },
+ "crypto": {
+  "BTC-USD": "Bitcoin",
+  "ETH-USD": "Ethereum",
+  "SOL-USD": "Solana",
+  "XRP-USD": "XRP",
+  "BNB-USD": "BNB",
+  "ADA-USD": "Cardano",
+  "DOGE-USD": "Dogecoin",
+  "AVAX-USD": "Avalanche",
+  "LINK-USD": "Chainlink",
+  "DOT-USD": "Polkadot"
+ }
+}
