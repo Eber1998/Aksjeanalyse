@@ -42,10 +42,12 @@ summary{cursor:pointer;color:var(--ac);margin-top:8px}
 </style></head><body>
 <h1>📈 Aksjeanalyse</h1>
 <div class="sub" id="upd">Laster data…</div>
+<div class="sub" id="lv"></div>
 <div class="lg">🟢 <b>Kjøp</b> = sterke tegn opp<br>🟡 <b>Hold</b> = vent, ingen klar fordel<br>🔴 <b>Salg</b> = tegn på fall<br><b>Daglig risiko</b> = hvor mye kursen typisk svinger på én dag. Høy risiko betyr: bruk små beløp. Krypto har egne risikonivåer og måles bare mot andre kryptovalutaer, ikke mot aksjer.</div>
 <div class="add"><input id="q" list="cat" placeholder="Søk eller skriv ticker, f.eks. NHY.OL eller TSLA" autocomplete="off" autocapitalize="characters"><button id="addb">Legg til</button></div>
 <datalist id="cat"></datalist>
 <div id="msg"></div>
+<div class="n" style="margin-bottom:6px">Finner du ikke det du leter etter? <a id="gh" href="#" target="_blank" rel="noopener noreferrer" style="color:var(--ac)">Legg den til på GitHub</a>. Det er bare én ny linje, f.eks. <b>"SOL-USD": "Solana",</b></div>
 <button class="lk" id="rst">Nullstill til standardlisten</button>
 <div class="tabs" id="tabs"></div>
 <div id="cr"></div>
@@ -112,7 +114,7 @@ if(!/^[A-Z0-9.\-]{1,12}$/.test(t)){msg("Ugyldig ticker");return}
 if(D.some(d=>d.t===t)){msg(t+" ligger allerede i listen");return}
 const c=CAT.find(x=>x.split(":")[0]===t);
 D.push(base.find(b=>b.t===t)||{t,n:c?c.split(":")[1]:t,m:t.endsWith(".OL")?"Oslo":t.endsWith("-USD")?"Krypto":"USA"});
-save();i.value="";msg("");render()}
+save();i.value="";msg(base.some(b=>b.t===t)?"":"Ikke i databasen ennå. Bruk lenken under for å legge den til.");render()}
 function nod(d){return '<div class="card"><div class="row"><div><div class="t">'+d.t+'</div><div class="n">'+d.n+'</div></div><div class="n">Venter på data</div><button class="rm" data-rm="'+d.t+'">🗑</button></div><div class="n" style="margin-top:6px">Ingen analyse ennå. Legg tickeren til i watchlist.json på GitHub, så kommer data ved neste oppdatering.</div></div>'}
 let tab="Alle";
 function render(){
@@ -122,7 +124,7 @@ function render(){
  document.getElementById("list").innerHTML=items.map(({d,s})=>{
   if(d.rsi===undefined)return nod(d);const l=lab(s.tot),cls=d.c>=0?"up":"dn";
   return '<div class="card"><div class="row"><div><div class="t">'+d.t+'</div><div class="n">'+d.n+'</div></div>'+
-  '<div class="p"><div>'+pf(d.p)+'</div><div class="'+cls+'">'+(d.c>=0?"+":"")+d.c.toFixed(1)+' %</div></div>'+
+  '<div class="p"><div data-lp="'+d.t+'">'+pf(d.p)+'</div><div data-lc="'+d.t+'" class="'+cls+'">'+(d.c>=0?"+":"")+d.c.toFixed(1)+(d.m==="Krypto"?" % (24 t)":" %")+'</div></div>'+
   '<div class="badge" style="color:'+sg(d,s).c+'">'+sg(d,s).l+' · '+s.tot+'</div></div>'+
   sum(d,s)+'<div class="det">'+spark(d)+
   '<div class="g"><div><span>RSI</span> '+d.rsi+(d.rsi<30?" (oversolgt)":d.rsi>70?" (overkjøpt)":"")+'</div><div><span>MACD</span> '+(d.macd>0?"Kjøp":"Salg")+'</div>'+
@@ -138,6 +140,28 @@ if(e.target.id==="rst"){D=defList();save();msg("");render();return}
 const b=e.target.closest("[data-t]");if(b){tab=b.dataset.t;render();return}
  const c=e.target.closest(".card");if(c&&!e.target.closest(".det"))c.classList.toggle("open");
 });
+const LIVE={};
+const CG={TRX:"tron",SHIB:"shiba-inu",LTC:"litecoin",BCH:"bitcoin-cash",ATOM:"cosmos",XLM:"stellar",NEAR:"near",ETC:"ethereum-classic",FIL:"filecoin",ALGO:"algorand",AAVE:"aave",HBAR:"hedera-hashgraph",XMR:"monero",BTC:"bitcoin",ETH:"ethereum",SOL:"solana",XRP:"ripple",BNB:"binancecoin",ADA:"cardano",DOGE:"dogecoin",AVAX:"avalanche-2",LINK:"chainlink",DOT:"polkadot"};
+let WS=null,gotLive=false,pollT=null;
+function setLv(x){document.getElementById("lv").textContent="🟢 Live kurs for krypto ("+x+")"}
+function liveUpd(t){const l=LIVE[t];if(!l)return;const d=base.find(x=>x.t===t);if(d){d.p=l.p;d.c=l.c}
+ document.querySelectorAll('[data-lp="'+t+'"]').forEach(e=>{e.textContent=pf(l.p)});
+ document.querySelectorAll('[data-lc="'+t+'"]').forEach(e=>{e.textContent=(l.c>=0?"+":"")+l.c.toFixed(1)+" % (24 t)";e.className=l.c>=0?"up":"dn"})}
+function poll(){const cr=base.filter(s=>s.m==="Krypto"&&CG[s.t.replace("-USD","")]);if(!cr.length)return;
+ fetch("https://api.coingecko.com/api/v3/simple/price?ids="+cr.map(s=>CG[s.t.replace("-USD","")]).join(",")+"&vs_currencies=usd&include_24hr_change=true").then(r=>r.json()).then(j=>{
+  cr.forEach(s=>{const x=j[CG[s.t.replace("-USD","")]];if(x&&x.usd){LIVE[s.t]={p:x.usd,c:x.usd_24h_change||0};liveUpd(s.t)}});setLv("CoinGecko, hvert 30. sekund")}).catch(()=>{})}
+function liveStart(){
+ const cr=base.filter(s=>s.m==="Krypto");if(!cr.length)return;
+ if(window.WebSocket&&(!WS||WS.readyState>1)){
+  try{WS=new WebSocket("wss://stream.binance.com:9443/stream?streams="+cr.map(s=>s.t.replace("-USD","").toLowerCase()+"usdt@miniTicker").join("/"));
+   WS.onmessage=e=>{try{const m=JSON.parse(e.data).data,t=m.s.replace("USDT","")+"-USD",p=+m.c,o=+m.o;if(!(p>0&&o>0))return;LIVE[t]={p,c:(p-o)/o*100};gotLive=true;if(pollT){clearInterval(pollT);pollT=null}liveUpd(t);setLv("Binance")}catch(_){}};
+   WS.onclose=()=>{gotLive=false;if(document.visibilityState==="visible")setTimeout(liveStart,5000)};
+  }catch(_){}
+ }
+ setTimeout(()=>{if(!gotLive&&!pollT){poll();pollT=setInterval(poll,30000)}},8000);
+}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&base.length)liveStart()});
+try{const o=location.hostname.split(".")[0],r=location.pathname.split("/")[1];if(o&&r&&location.hostname.endsWith("github.io"))document.getElementById("gh").href="https://github.com/"+o+"/"+r+"/edit/main/watchlist.json"}catch(e){}
 let DEF=[];
 function defList(){return base.filter(s=>DEF.includes(s.t))}
 fetch("data.json?v="+Date.now()).then(r=>{if(!r.ok)throw 0;return r.json()}).then(j=>{
@@ -147,6 +171,6 @@ fetch("data.json?v="+Date.now()).then(r=>{if(!r.ok)throw 0;return r.json()}).the
  D=Array.isArray(W)?W.map(w=>base.find(b=>b.t===w.t)||w):defList();
  document.getElementById("cat").innerHTML=base.map(s=>'<option value="'+s.t+'">'+esc(s.n)+'</option>').join("");
  document.getElementById("upd").textContent="Oppdatert "+new Date(j.updated).toLocaleString("no-NO")+". Kurser kan være ca. 15 min forsinket.";
- render();
+ render();liveStart();
 }).catch(()=>{document.getElementById("upd").textContent="Fant ikke data.json. Kjør GitHub Action først.";render()});
 </script></body></html>
