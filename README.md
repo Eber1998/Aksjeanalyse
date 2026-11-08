@@ -1,0 +1,2 @@
+# Aksjeanalyse
+Aksje/ krypto analyseverktøy
