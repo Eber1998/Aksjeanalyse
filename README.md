@@ -32,3 +32,4 @@ Etter lagring kjører oppdateringen, og aksjen kan søkes opp og legges til i ap
 - Gratis kurser er ca. 15 min forsinket, og Yahoo kan av og til svikte (aksjen hoppes da over).
 - GitHub stopper planlagte kjøringer hvis repoet er helt inaktivt i 60 dager. Trykk «Run workflow» for å starte igjen.
 - Dette er statistikk, ikke investeringsråd.
+.
